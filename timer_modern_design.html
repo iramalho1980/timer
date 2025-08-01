@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Timer Pro">
+    <title>Timer Pro - Design Moderno</title>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --background: #0f0f23;
+            --background-light: #1e1e3f;
+            --surface: #2a2a4a;
+            --surface-light: #3a3a5a;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #374151;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background) 0%, var(--background-light) 100%);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            padding-top: max(env(safe-area-inset-top), 20px);
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 24px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .time-config-card {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .config-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        .time-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .time-input {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 12px;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .time-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .timers-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .timer-card {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timer-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+            border-radius: 20px 20px 0 0;
+        }
+
+        .timer-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 16px;
+        }
+
+        .timer-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .timer-circle-bg {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 8;
+        }
+
+        .timer-circle {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 314;
+            stroke-dashoffset: 314;
+            transition: stroke-dashoffset 1s ease;
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+
+        .main-timer .timer-circle {
+            stroke: var(--primary-color);
+        }
+
+        .seconds-timer .timer-circle {
+            stroke: var(--secondary-color);
+        }
+
+        .timer-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .timer-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .info-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .info-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            position: relative;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: none;
+            letter-spacing: 0.3px;
+            min-width: 100px;
+            touch-action: manipulation;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover, .btn-primary:active {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary-color), #fbbf24);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-secondary:hover, .btn-secondary:active {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-outline:hover, .btn-outline:active {
+            background: var(--surface-light);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status-bar {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 16px 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .status-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .status-active {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .popup-content {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 32px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            max-width: 90%;
+            animation: popupSlideIn 0.4s ease-out;
+        }
+
+        @keyframes popupSlideIn {
+            from {
+                transform: scale(0.8) translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .popup-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .popup-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--success-color), #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .popup-message {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        /* Otimizações específicas para iPhone */
+        @media screen and (max-width: 414px) {
+            .container {
+                padding: 16px;
+                gap: 20px;
+            }
+            
+            .title {
+                font-size: 1.7rem;
+            }
+            
+            .timer-container {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .timer-text {
+                font-size: 1.2rem;
+            }
+            
+            .btn {
+                padding: 14px 20px;
+                font-size: 0.9rem;
+                min-width: 90px;
+            }
+            
+            .timers-section {
+                gap: 12px;
+            }
+            
+            .timer-card {
+                padding: 16px;
+            }
+        }
+
+        /* iPhone SE e dispositivos menores */
+        @media screen and (max-width: 375px) {
+            .container {
+                gap: 16px;
+            }
+            
+            .timer-container {
+                width: 90px;
+                height: 90px;
+            }
+            
+            .timer-text {
+                font-size: 1.1rem;
+            }
+            
+            .controls {
+                gap: 8px;
+            }
+            
+            .btn {
+                padding: 12px 16px;
+                font-size: 0.85rem;
+                min-width: 80px;
+            }
+        }
+
+        /* Orientação landscape */
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+            .container {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 16px;
+                padding: 10px;
+            }
+            
+            .header {
+                width: 100%;
+                margin-bottom: 0;
+            }
+            
+            .title {
+                font-size: 1.4rem;
+            }
+            
+            .time-config-card {
+                flex: 1;
+                min-width: 300px;
+            }
+            
+            .timers-section {
+                flex: 1;
+                min-width: 250px;
+            }
+            
+            .timer-container {
+                width: 80px;
+                height: 80px;
+            }
+        }
+
+        /* Suporte para notch */
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: max(16px, env(safe-area-inset-left));
+                padding-right: max(16px, env(safe-area-inset-right));
+                padding-top: max(20px, env(safe-area-inset-top));
+                padding-bottom: max(16px, env(safe-area-inset-bottom));
+            }
+        }
+
+        /* Animações suaves */
+        .timer-card, .info-card, .time-config-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .timer-card:hover, .info-card:hover, .time-config-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Estados de loading */
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Timer Pro</h1>
+            <p class="subtitle">Gerenciador de tempo moderno</p>
+        </div>
+
+        <div class="time-config-card">
+            <h2 class="config-title">Configuração de Horário</h2>
+            <div class="time-inputs">
+                <div class="input-group">
+                    <label class="input-label">Início</label>
+                    <input type="time" id="startTime" class="time-input">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Término</label>
+                    <input type="time" id="endTime" class="time-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="timers-section">
+            <div class="timer-card main-timer">
+                <div class="timer-container">
+                    <svg class="timer-svg" viewBox="0 0 200 200">
+                        <circle class="timer-circle-bg" cx="100" cy="100" r="50"></circle>
+                        <circle class="timer-circle" cx="100" cy="100" r="50" id="mainTimerCircle"></circle>
+                    </svg>
+                    <div class="timer-text" id="mainTimerText">00:00</div>
+                </div>
+                <div class="timer-label">Tempo Total</div>
+            </div>
+            
+            <div class="timer-card seconds-timer">
+                <div class="timer-container">
+                    <svg class="timer-svg" viewBox="0 0 200 200">
+                        <circle class="timer-circle-bg" cx="100" cy="100" r="50"></circle>
+                        <circle class="timer-circle" cx="100" cy="100" r="50" id="secondsTimerCircle"></circle>
+                    </svg>
+                    <div class="timer-text" id="secondsTimerText">00</div>
+                </div>
+                <div class="timer-label">Segundos</div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-card">
+                <div class="info-title">Tempo Decorrido</div>
+                <div class="info-value" id="elapsedTime">00:00:00</div>
+            </div>
+            <div class="info-card">
+                <div class="info-title">Tempo Restante</div>
+                <div class="info-value" id="remainingTime">00:00:00</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="startBtn">
+                <span>▶ Iniciar</span>
+            </button>
+            <button class="btn btn-secondary" id="pauseBtn">
+                <span>⏸ Pausar</span>
+            </button>
+            <button class="btn btn-outline" id="resetBtn">
+                <span>⟲ Resetar</span>
+            </button>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-text" id="status">Configure os horários e toque em Iniciar</div>
+        </div>
+    </div>
+
+    <div class="popup" id="popup">
+        <div class="popup-content">
+            <div class="popup-icon">🎉</div>
+            <h2 class="popup-title">Tempo Finalizado!</h2>
+            <p class="popup-message">O período configurado foi concluído com sucesso!</p>
+            <button class="btn btn-primary" onclick="closePopup()">
+                <span>✓ Fechar</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        class ModernTimerApp {
+            constructor() {
+                this.totalTime = 0;
+                this.currentTime = 0;
+                this.elapsedTime = 0;
+                this.isRunning = false;
+                this.isPaused = false;
+                this.interval = null;
+                this.circumference = 2 * Math.PI * 50;
+                
+                this.initElements();
+                this.bindEvents();
+                this.setDefaultTimes();
+                this.updateDisplay();
+            }
+
+            initElements() {
+                this.startTimeInput = document.getElementById('startTime');
+                this.endTimeInput = document.getElementById('endTime');
+                this.startBtn = document.getElementById('startBtn');
+                this.pauseBtn = document.getElementById('pauseBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.mainTimerText = document.getElementById('mainTimerText');
+                this.secondsTimerText = document.getElementById('secondsTimerText');
+                this.mainTimerCircle = document.getElementById('mainTimerCircle');
+                this.secondsTimerCircle = document.getElementById('secondsTimerCircle');
+                this.elapsedTimeDisplay = document.getElementById('elapsedTime');
+                this.remainingTimeDisplay = document.getElementById('remainingTime');
+                this.status = document.getElementById('status');
+                this.popup = document.getElementById('popup');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.start());
+                this.pauseBtn.addEventListener('click', () => this.pause());
+                this.resetBtn.addEventListener('click', () => this.reset());
+                
+                this.startTimeInput.addEventListener('change', () => this.calculateTotalTime());
+                this.endTimeInput.addEventListener('change', () => this.calculateTotalTime());
+
+                // Adicionar feedback tátil nos botões
+                [this.startBtn, this.pauseBtn, this.resetBtn].forEach(btn => {
+                    btn.addEventListener('touchstart', () => {
+                        if (navigator.vibrate) {
+                            navigator.vibrate(10);
+                        }
+                    });
+                });
+            }
+
+            setDefaultTimes() {
+                const now = new Date();
+                const currentTime = now.getHours().toString().padStart(2, '0') + ':' + 
+                                  now.getMinutes().toString().padStart(2, '0');
+                this.startTimeInput.value = currentTime;
+                
+                const endTime = new Date(now.getTime() + 60 * 60 * 1000);
+                const endTimeStr = endTime.getHours().toString().padStart(2, '0') + ':' + 
+                                  endTime.getMinutes().toString().padStart(2, '0');
+                this.endTimeInput.value = endTimeStr;
+                
+                this.calculateTotalTime();
+            }
+
+            calculateTotalTime() {
+                if (!this.startTimeInput.value || !this.endTimeInput.value) {
+                    return;
+                }
+
+                const startTime = this.parseTime(this.startTimeInput.value);
+                const endTime = this.parseTime(this.endTimeInput.value);
+                
+                let diffMinutes = endTime - startTime;
+                if (diffMinutes < 0) {
+                    diffMinutes += 24 * 60;
+                }
+                
+                this.totalTime = diffMinutes * 60;
+                this.currentTime = this.totalTime;
+                this.elapsedTime = 0;
+                this.updateDisplay();
+            }
+
+            parseTime(timeStr) {
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                return hours * 60 + minutes;
+            }
+
+            start() {
+                if (!this.isRunning && !this.isPaused) {
+                    this.calculateTotalTime();
+                }
+                
+                if (this.totalTime <= 0) {
+                    this.updateStatus('Configure horários válidos!', false);
+                    return;
+                }
+
+                this.isRunning = true;
+                this.isPaused = false;
+                this.updateStatus('Timer em execução...', true);
+                
+                this.startBtn.innerHTML = '<span>⏳ Executando...</span>';
+                this.startBtn.disabled = true;
+                
+                this.interval = setInterval(() => {
+                    this.currentTime--;
+                    this.elapsedTime++;
+                    this.updateDisplay();
+                    
+                    if (this.currentTime <= 0) {
+                        this.finish();
+                    }
+                }, 1000);
+            }
+
+            pause() {
+                if (this.isRunning) {
+                    this.isRunning = false;
+                    this.isPaused = true;
+                    clearInterval(this.interval);
+                    this.updateStatus('Timer pausado', false);
+                    this.startBtn.innerHTML = '<span>▶ Continuar</span>';
+                    this.startBtn.disabled = false;
+                }
+            }
+
+            reset() {
+                this.isRunning = false;
+                this.isPaused = false;
+                clearInterval(this.interval);
+                this.calculateTotalTime();
+                this.updateStatus('Pronto para iniciar', false);
+                this.startBtn.innerHTML = '<span>▶ Iniciar</span>';
+                this.startBtn.disabled = false;
+            }
+
+            finish() {
+                this.isRunning = false;
+                this.isPaused = false;
+                clearInterval(this.interval);
+                this.currentTime = 0;
+                this.elapsedTime = this.totalTime;
+                this.updateDisplay();
+                this.updateStatus('Tempo finalizado!', false);
+                this.startBtn.innerHTML = '<span>▶ Iniciar</span>';
+                this.startBtn.disabled = false;
+                this.showPopup();
+            }
+
+            updateDisplay() {
+                const hours = Math.floor(this.currentTime / 3600);
+                const minutes = Math.floor((this.currentTime % 3600) / 60);
+                const seconds = this.currentTime % 60;
+                
+                if (hours > 0) {
+                    this.mainTimerText.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                } else {
+                    this.mainTimerText.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+                
+                this.secondsTimerText.textContent = seconds.toString().padStart(2, '0');
+                
+                const elapsedHours = Math.floor(this.elapsedTime / 3600);
+                const elapsedMinutes = Math.floor((this.elapsedTime % 3600) / 60);
+                const elapsedSeconds = this.elapsedTime % 60;
+                this.elapsedTimeDisplay.textContent = `${elapsedHours.toString().padStart(2, '0')}:${elapsedMinutes.toString().padStart(2, '0')}:${elapsedSeconds.toString().padStart(2, '0')}`;
+                
+                this.remainingTimeDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const mainProgress = this.totalTime > 0 ? this.elapsedTime / this.totalTime : 0;
+                const mainOffset = this.circumference - (mainProgress * this.circumference);
+                this.mainTimerCircle.style.strokeDashoffset = mainOffset;
+                
+                const secondsProgress = seconds / 60;
+                const secondsOffset = this.circumference - (secondsProgress * this.circumference);
+                this.secondsTimerCircle.style.strokeDashoffset = secondsOffset;
+            }
+
+            updateStatus(message, isActive) {
+                this.status.textContent = message;
+                this.status.className = isActive ? 'status-text status-active' : 'status-text';
+            }
+
+            showPopup() {
+                this.popup.style.display = 'flex';
+                if (navigator.vibrate) {
+                    navigator.vibrate([200, 100, 200, 100, 200]);
+                }
+                
+                try {
+                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+                    audio.play().catch(() => {});
+                } catch (e) {}
+            }
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+
+        // Inicializar app
+        window.addEventListener('DOMContentLoaded', () => {
+            new ModernTimerApp();
+        });
+
+        // Fechar popup com ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closePopup();
+            }
+        });
+
+        // Prevenir zoom e scroll bounce no iOS
+        document.addEventListener('touchmove', function (event) {
+            if (event.scale !== 1) { event.preventDefault(); }
+        }, { passive: false });
+
+        document.addEventListener('touchstart', function (event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        // Wake lock para manter tela ativa
+        if ('wakeLock' in navigator) {
+            let wakeLock = null;
+            const requestWakeLock = async () => {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                } catch (err) {
+                    console.log('Wake Lock não suportado');
+                }
+            };
+            requestWakeLock();
+        }
+
+        // Service Worker para PWA (opcional)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Registrar service worker se necessário
+            });
+        }
+    </script>
+</body>
+</html>
+
