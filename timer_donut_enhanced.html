@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Timer Donut">
+    <title>Timer Regressivo - Donut Enhanced</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 25%, #2d4a3e 50%, #4a6b5a 75%, #6b8e7a 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            padding-top: max(env(safe-area-inset-top), 20px);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .title {
+            color: #ffffff;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+            text-align: center;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
+            to { text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.6); }
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .input-group label {
+            color: #ffffff;
+            font-size: 0.8rem;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .time-input {
+            width: 70px;
+            padding: 8px 4px;
+            border: 2px solid #ffff00;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            color: #ffffff;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.3);
+        }
+
+        .time-input:focus {
+            outline: none;
+            border-color: #ffffff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .donuts-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .timer-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+        }
+
+        .timer-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+            overflow: visible;
+        }
+
+        .timer-circle-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.15);
+            stroke-width: 12;
+        }
+
+        .timer-circle {
+            fill: none;
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 314;
+            stroke-dashoffset: 314;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .main-timer .timer-circle {
+            stroke: #00ff41;
+            filter: drop-shadow(0 0 10px #00ff41) drop-shadow(0 0 15px #00ff41);
+        }
+
+        .seconds-timer .timer-circle {
+            stroke: #ff6600;
+            filter: drop-shadow(0 0 10px #ff6600) drop-shadow(0 0 15px #ff6600);
+        }
+
+        .timer-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .timer-label {
+            color: #ffffff;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 5px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .info-boxes {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .info-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+            max-width: 150px;
+            backdrop-filter: blur(5px);
+        }
+
+        .info-box-title {
+            color: #ffff00;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+        }
+
+        .info-box-value {
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            touch-action: manipulation;
+        }
+
+        .btn-start {
+            background: linear-gradient(45deg, #ffff00, #ffffff);
+            color: #000000;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.5);
+        }
+
+        .btn-start:hover, .btn-start:active {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 20px rgba(255, 255, 0, 0.7);
+        }
+
+        .btn-pause {
+            background: linear-gradient(45deg, #ff6b00, #ffff00);
+            color: #000000;
+            box-shadow: 0 0 15px rgba(255, 107, 0, 0.5);
+        }
+
+        .btn-pause:hover, .btn-pause:active {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 20px rgba(255, 107, 0, 0.7);
+        }
+
+        .btn-reset {
+            background: linear-gradient(45deg, #ffffff, #c0c0c0);
+            color: #000000;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-reset:hover, .btn-reset:active {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 20px rgba(255, 255, 255, 0.7);
+        }
+
+        .status {
+            color: #ffffff;
+            font-size: 1rem;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .popup-content {
+            background: linear-gradient(135deg, #000000, #2d4a3e);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            border: 3px solid #ffff00;
+            box-shadow: 0 0 50px rgba(255, 255, 0, 0.8);
+            animation: popupAnimation 0.5s ease-out;
+            max-width: 90%;
+        }
+
+        @keyframes popupAnimation {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .popup-title {
+            color: #ffff00;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 0 0 30px rgba(255, 255, 0, 0.8);
+            animation: pulseGlow 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { text-shadow: 0 0 30px rgba(255, 255, 0, 0.8); }
+            to { text-shadow: 0 0 50px rgba(255, 255, 0, 1), 0 0 70px rgba(255, 255, 0, 0.8); }
+        }
+
+        .popup-message {
+            color: #ffffff;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+        }
+
+        .popup-btn {
+            background: linear-gradient(45deg, #ffffff, #ffff00);
+            color: #000000;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+
+        .popup-btn:hover, .popup-btn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 25px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Otimizações específicas para iPhone */
+        @media screen and (max-width: 414px) {
+            .title {
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+            }
+            
+            .timer-container {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .timer-text {
+                font-size: 1rem;
+            }
+            
+            .time-input {
+                width: 60px;
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .info-box {
+                min-width: 100px;
+                padding: 8px;
+            }
+            
+            .popup-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Orientação landscape no iPhone */
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+            .container {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-around;
+                align-items: flex-start;
+                padding: 5px;
+            }
+            
+            .title {
+                width: 100%;
+                font-size: 1.3rem;
+                margin-bottom: 5px;
+            }
+            
+            .donuts-container {
+                margin-bottom: 5px;
+            }
+            
+            .timer-container {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .info-boxes {
+                margin-bottom: 5px;
+            }
+        }
+
+        /* Suporte para notch do iPhone X e superiores */
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: max(10px, env(safe-area-inset-left));
+                padding-right: max(10px, env(safe-area-inset-right));
+                padding-top: max(20px, env(safe-area-inset-top));
+                padding-bottom: max(10px, env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Timer Regressivo Enhanced</h1>
+        
+        <div class="time-inputs">
+            <div class="input-group">
+                <label for="startHour">Hora Inicial</label>
+                <input type="time" id="startTime" class="time-input" style="width: 100px;">
+            </div>
+            <div class="input-group">
+                <label for="endHour">Hora Final</label>
+                <input type="time" id="endTime" class="time-input" style="width: 100px;">
+            </div>
+        </div>
+
+        <div class="donuts-container">
+            <div class="timer-container main-timer">
+                <svg class="timer-svg" viewBox="0 0 200 200">
+                    <circle class="timer-circle-bg" cx="100" cy="100" r="50"></circle>
+                    <circle class="timer-circle" cx="100" cy="100" r="50" id="mainTimerCircle"></circle>
+                </svg>
+                <div class="timer-text" id="mainTimerText">00:00</div>
+                <div class="timer-label">Tempo Total</div>
+            </div>
+            
+            <div class="timer-container seconds-timer">
+                <svg class="timer-svg" viewBox="0 0 200 200">
+                    <circle class="timer-circle-bg" cx="100" cy="100" r="50"></circle>
+                    <circle class="timer-circle" cx="100" cy="100" r="50" id="secondsTimerCircle"></circle>
+                </svg>
+                <div class="timer-text" id="secondsTimerText">00</div>
+                <div class="timer-label">Segundos</div>
+            </div>
+        </div>
+
+        <div class="info-boxes">
+            <div class="info-box">
+                <div class="info-box-title">Tempo Passado</div>
+                <div class="info-box-value" id="elapsedTime">00:00:00</div>
+            </div>
+            <div class="info-box">
+                <div class="info-box-title">Tempo Restante</div>
+                <div class="info-box-value" id="remainingTime">00:00:00</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-start" id="startBtn">Iniciar</button>
+            <button class="btn btn-pause" id="pauseBtn">Pausar</button>
+            <button class="btn btn-reset" id="resetBtn">Resetar</button>
+        </div>
+
+        <div class="status" id="status">Configure os horários e clique em Iniciar</div>
+    </div>
+
+    <div class="popup" id="popup">
+        <div class="popup-content">
+            <h2 class="popup-title">🎉 TEMPO FINALIZADO! 🎉</h2>
+            <p class="popup-message">O período configurado foi concluído com sucesso!</p>
+            <button class="popup-btn" onclick="closePopup()">Fechar</button>
+        </div>
+    </div>
+
+    <script>
+        class EnhancedDonutTimer {
+            constructor() {
+                this.totalTime = 0;
+                this.currentTime = 0;
+                this.elapsedTime = 0;
+                this.isRunning = false;
+                this.isPaused = false;
+                this.interval = null;
+                this.circumference = 2 * Math.PI * 50; // raio do círculo = 50
+                
+                this.initElements();
+                this.bindEvents();
+                this.updateDisplay();
+                this.setCurrentTime();
+            }
+
+            initElements() {
+                this.startTimeInput = document.getElementById('startTime');
+                this.endTimeInput = document.getElementById('endTime');
+                this.startBtn = document.getElementById('startBtn');
+                this.pauseBtn = document.getElementById('pauseBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.mainTimerText = document.getElementById('mainTimerText');
+                this.secondsTimerText = document.getElementById('secondsTimerText');
+                this.mainTimerCircle = document.getElementById('mainTimerCircle');
+                this.secondsTimerCircle = document.getElementById('secondsTimerCircle');
+                this.elapsedTimeDisplay = document.getElementById('elapsedTime');
+                this.remainingTimeDisplay = document.getElementById('remainingTime');
+                this.status = document.getElementById('status');
+                this.popup = document.getElementById('popup');
+            }
+
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.start());
+                this.pauseBtn.addEventListener('click', () => this.pause());
+                this.resetBtn.addEventListener('click', () => this.reset());
+                
+                this.startTimeInput.addEventListener('change', () => this.calculateTotalTime());
+                this.endTimeInput.addEventListener('change', () => this.calculateTotalTime());
+            }
+
+            setCurrentTime() {
+                const now = new Date();
+                const currentTime = now.getHours().toString().padStart(2, '0') + ':' + 
+                                  now.getMinutes().toString().padStart(2, '0');
+                this.startTimeInput.value = currentTime;
+                
+                // Define hora final como 1 hora depois
+                const endTime = new Date(now.getTime() + 60 * 60 * 1000);
+                const endTimeStr = endTime.getHours().toString().padStart(2, '0') + ':' + 
+                                  endTime.getMinutes().toString().padStart(2, '0');
+                this.endTimeInput.value = endTimeStr;
+                
+                this.calculateTotalTime();
+            }
+
+            calculateTotalTime() {
+                if (!this.startTimeInput.value || !this.endTimeInput.value) {
+                    return;
+                }
+
+                const startTime = this.parseTime(this.startTimeInput.value);
+                const endTime = this.parseTime(this.endTimeInput.value);
+                
+                let diffMinutes = endTime - startTime;
+                if (diffMinutes < 0) {
+                    diffMinutes += 24 * 60; // Adiciona 24 horas se for no dia seguinte
+                }
+                
+                this.totalTime = diffMinutes * 60; // Converte para segundos
+                this.currentTime = this.totalTime;
+                this.elapsedTime = 0;
+                this.updateDisplay();
+            }
+
+            parseTime(timeStr) {
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                return hours * 60 + minutes;
+            }
+
+            start() {
+                if (!this.isRunning && !this.isPaused) {
+                    this.calculateTotalTime();
+                }
+                
+                if (this.totalTime <= 0) {
+                    this.status.textContent = 'Configure horários válidos!';
+                    return;
+                }
+
+                this.isRunning = true;
+                this.isPaused = false;
+                this.status.textContent = 'Timer em execução...';
+                
+                this.startBtn.textContent = 'Em execução...';
+                this.startBtn.disabled = true;
+                
+                this.interval = setInterval(() => {
+                    this.currentTime--;
+                    this.elapsedTime++;
+                    this.updateDisplay();
+                    
+                    if (this.currentTime <= 0) {
+                        this.finish();
+                    }
+                }, 1000);
+            }
+
+            pause() {
+                if (this.isRunning) {
+                    this.isRunning = false;
+                    this.isPaused = true;
+                    clearInterval(this.interval);
+                    this.status.textContent = 'Timer pausado';
+                    this.startBtn.textContent = 'Continuar';
+                    this.startBtn.disabled = false;
+                }
+            }
+
+            reset() {
+                this.isRunning = false;
+                this.isPaused = false;
+                clearInterval(this.interval);
+                this.calculateTotalTime();
+                this.status.textContent = 'Pronto para iniciar';
+                this.startBtn.textContent = 'Iniciar';
+                this.startBtn.disabled = false;
+            }
+
+            finish() {
+                this.isRunning = false;
+                this.isPaused = false;
+                clearInterval(this.interval);
+                this.currentTime = 0;
+                this.elapsedTime = this.totalTime;
+                this.updateDisplay();
+                this.status.textContent = 'Tempo finalizado!';
+                this.startBtn.textContent = 'Iniciar';
+                this.startBtn.disabled = false;
+                this.showPopup();
+            }
+
+            updateDisplay() {
+                // Atualizar timer principal
+                const hours = Math.floor(this.currentTime / 3600);
+                const minutes = Math.floor((this.currentTime % 3600) / 60);
+                const seconds = this.currentTime % 60;
+                
+                if (hours > 0) {
+                    this.mainTimerText.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                } else {
+                    this.mainTimerText.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+                
+                // Atualizar timer de segundos
+                this.secondsTimerText.textContent = seconds.toString().padStart(2, '0');
+                
+                // Atualizar tempo passado
+                const elapsedHours = Math.floor(this.elapsedTime / 3600);
+                const elapsedMinutes = Math.floor((this.elapsedTime % 3600) / 60);
+                const elapsedSeconds = this.elapsedTime % 60;
+                this.elapsedTimeDisplay.textContent = `${elapsedHours.toString().padStart(2, '0')}:${elapsedMinutes.toString().padStart(2, '0')}:${elapsedSeconds.toString().padStart(2, '0')}`;
+                
+                // Atualizar tempo restante
+                this.remainingTimeDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Atualizar círculos
+                const mainProgress = this.totalTime > 0 ? this.elapsedTime / this.totalTime : 0;
+                const mainOffset = this.circumference - (mainProgress * this.circumference);
+                this.mainTimerCircle.style.strokeDashoffset = mainOffset;
+                
+                const secondsProgress = seconds / 60;
+                const secondsOffset = this.circumference - (secondsProgress * this.circumference);
+                this.secondsTimerCircle.style.strokeDashoffset = secondsOffset;
+                
+                // Cores dinâmicas baseadas no progresso
+                this.updateColors(mainProgress);
+            }
+
+            updateColors(progress) {
+                let mainColor, secondsColor;
+                
+                if (progress < 0.25) {
+                    mainColor = '#00ff41'; // Verde neon
+                    secondsColor = '#00ff41';
+                } else if (progress < 0.5) {
+                    mainColor = '#00ffff'; // Ciano neon
+                    secondsColor = '#00ffff';
+                } else if (progress < 0.75) {
+                    mainColor = '#ffff00'; // Amarelo neon
+                    secondsColor = '#ffff00';
+                } else if (progress < 0.9) {
+                    mainColor = '#ff6600'; // Laranja vibrante
+                    secondsColor = '#ff6600';
+                } else {
+                    mainColor = '#ff0066'; // Rosa/magenta vibrante
+                    secondsColor = '#ff0066';
+                }
+                
+                this.mainTimerCircle.style.stroke = mainColor;
+                this.mainTimerCircle.style.filter = `drop-shadow(0 0 10px ${mainColor}) drop-shadow(0 0 15px ${mainColor})`;
+                
+                this.secondsTimerCircle.style.stroke = secondsColor;
+                this.secondsTimerCircle.style.filter = `drop-shadow(0 0 10px ${secondsColor}) drop-shadow(0 0 15px ${secondsColor})`;
+            }
+
+            showPopup() {
+                this.popup.style.display = 'flex';
+                // Vibração no dispositivo móvel (se suportado)
+                if (navigator.vibrate) {
+                    navigator.vibrate([200, 100, 200, 100, 200]);
+                }
+                // Efeito sonoro
+                try {
+                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+                    audio.play().catch(() => {});
+                } catch (e) {}
+            }
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+
+        // Inicializar o timer quando a página carregar
+        window.addEventListener('DOMContentLoaded', () => {
+            new EnhancedDonutTimer();
+        });
+
+        // Fechar popup com ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closePopup();
+            }
+        });
+
+        // Prevenir zoom no iOS
+        document.addEventListener('touchmove', function (event) {
+            if (event.scale !== 1) { event.preventDefault(); }
+        }, { passive: false });
+
+        // Prevenir scroll bounce no iOS
+        document.addEventListener('touchstart', function (event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        // Manter tela ativa (se suportado)
+        if ('wakeLock' in navigator) {
+            let wakeLock = null;
+            const requestWakeLock = async () => {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                } catch (err) {
+                    console.log('Wake Lock não suportado');
+                }
+            };
+            requestWakeLock();
+        }
+    </script>
+</body>
+</html>
+
